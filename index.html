@@ -519,10 +519,14 @@
 
     .resultbar {
       display: grid;
-      grid-template-columns: auto auto auto 1fr;
+      grid-template-columns: auto auto auto auto 1fr;
       gap: 10px;
       align-items: center;
       padding: 12px;
+    }
+
+    .recordStart {
+      display: none;
     }
 
     .winner {
@@ -673,13 +677,15 @@
       grid-template-rows: repeat(var(--record-rows, 3), minmax(0, 1fr));
       gap: var(--record-gap, 8px);
       align-items: stretch;
+      overflow: hidden;
     }
 
     body.recordMode .card {
       min-height: 0;
       padding: var(--record-pad, 8px) 5px;
-      gap: 3px;
+      gap: var(--record-inner-gap, 3px);
       grid-template-rows: minmax(0, 1fr) auto auto;
+      overflow: hidden;
     }
 
     body.recordMode .character {
@@ -687,6 +693,7 @@
       height: var(--record-char-h, 92px);
       max-width: 100%;
       max-height: 100%;
+      align-self: center;
     }
 
     body.recordMode .number {
@@ -694,12 +701,13 @@
       min-width: 0;
       width: min(100%, 58px);
       font-size: var(--record-number-font, 13px);
+      line-height: 1;
     }
 
     body.recordMode .name {
       min-height: 0;
       font-size: var(--record-name-font, 14px);
-      line-height: 1.12;
+      line-height: 1.05;
     }
 
     body.recordMode .doron {
@@ -707,7 +715,7 @@
     }
 
     body.recordMode .resultbar {
-      grid-template-columns: 1fr 1fr 1fr;
+      grid-template-columns: 1fr 1fr;
       padding: 8px;
       gap: 8px;
     }
@@ -717,6 +725,13 @@
       justify-self: center;
       text-align: center;
       font-size: clamp(16px, 4vw, 22px);
+    }
+
+    body.recordMode .recordStart {
+      display: block;
+      background: linear-gradient(135deg, #ffe08a, #f0b62b);
+      color: #17120a;
+      border: 0;
     }
 
     body.recordMode #recordBtn {
@@ -779,6 +794,7 @@
     </section>
 
     <section class="resultbar">
+      <button type="button" id="recordStartBtn" class="recordStart">抽選開始</button>
       <button type="button" id="pauseBtn">一時停止</button>
       <button type="button" id="resetBtn">リセット</button>
       <button type="button" id="recordBtn">録画モード</button>
@@ -806,6 +822,7 @@
       const overlay = $("overlay");
       const modalName = $("modalName");
       const startBtn = $("startBtn");
+      const recordStartBtn = $("recordStartBtn");
       const pauseBtn = $("pauseBtn");
       const durationSelect = $("durationSelect");
       const recordBtn = $("recordBtn");
@@ -932,16 +949,25 @@
 
       function updateRecordLayout() {
         const total = Math.max(1, participants.length);
-        const cols = Math.max(2, Math.ceil(Math.sqrt(total * 9 / 16)));
+        const viewportW = Math.max(320, window.innerWidth || 390);
+        const viewportH = Math.max(520, window.innerHeight || 844);
+        const stageW = Math.min(viewportW - 12, viewportH * 9 / 16);
+        const stageH = Math.max(220, viewportH - 178);
+        const cols = Math.max(2, Math.ceil(Math.sqrt(total * stageW / stageH)));
         const rows = Math.max(1, Math.ceil(total / cols));
         const dense = total > 24;
         const veryDense = total > 48;
-        const charW = Math.max(28, Math.min(76, Math.round(220 / Math.sqrt(total))));
+        const gap = veryDense ? 2 : dense ? 3 : 6;
+        const pad = veryDense ? 2 : dense ? 3 : 6;
+        const cardW = Math.max(24, (stageW - gap * (cols - 1)) / cols);
+        const cardH = Math.max(36, (stageH - gap * (rows - 1)) / rows);
+        const textBudget = Math.max(16, Math.min(42, cardH * 0.34));
+        const charW = Math.max(16, Math.min(76, Math.round(Math.min(cardW * 0.78, (cardH - textBudget - pad * 2) * 0.82))));
         const charH = Math.round(charW * 1.2);
-        const nameFont = Math.max(8, Math.min(14, Math.round(30 / Math.sqrt(total) + 8)));
+        const nameFont = Math.max(6, Math.min(14, Math.floor(Math.min(cardW / 7.5, cardH / 9.5))));
         const numberFont = Math.max(8, Math.min(13, nameFont));
-        const gap = veryDense ? 3 : dense ? 4 : 8;
-        const pad = veryDense ? 3 : dense ? 4 : 8;
+        const numberH = Math.max(12, Math.min(24, numberFont + 8));
+        const innerGap = veryDense ? 1 : 2;
 
         grid.style.setProperty("--record-cols", String(cols));
         grid.style.setProperty("--record-rows", String(rows));
@@ -949,10 +975,11 @@
         grid.style.setProperty("--record-char-h", `${charH}px`);
         grid.style.setProperty("--record-name-font", `${nameFont}px`);
         grid.style.setProperty("--record-number-font", `${numberFont}px`);
-        grid.style.setProperty("--record-number-h", `${Math.max(18, numberFont + 10)}px`);
+        grid.style.setProperty("--record-number-h", `${numberH}px`);
         grid.style.setProperty("--record-doron-font", `${Math.max(18, Math.min(34, nameFont * 2))}px`);
         grid.style.setProperty("--record-gap", `${gap}px`);
         grid.style.setProperty("--record-pad", `${pad}px`);
+        grid.style.setProperty("--record-inner-gap", `${innerGap}px`);
       }
 
       function unlockAudio() {
@@ -1018,6 +1045,7 @@
         running = false;
         paused = false;
         startBtn.disabled = false;
+        recordStartBtn.disabled = false;
         durationSelect.disabled = false;
         pauseBtn.textContent = "一時停止";
         winner.textContent = "---";
@@ -1071,6 +1099,7 @@
         running = true;
         paused = false;
         startBtn.disabled = true;
+        recordStartBtn.disabled = true;
         durationSelect.disabled = true;
         timer = setTimeout(step, firstStepDelay);
       }
@@ -1080,6 +1109,7 @@
         running = false;
         paused = false;
         startBtn.disabled = false;
+        recordStartBtn.disabled = false;
         durationSelect.disabled = false;
 
         const alive = aliveParticipants();
@@ -1112,6 +1142,7 @@
       }
 
       $("startBtn").addEventListener("click", start);
+      $("recordStartBtn").addEventListener("click", start);
       $("resetBtn").addEventListener("click", applyInput);
       $("sampleBtn").addEventListener("click", loadSample);
       $("clearBtn").addEventListener("click", () => {
@@ -1131,7 +1162,9 @@
       recordBtn.addEventListener("click", () => {
         const enabled = document.body.classList.toggle("recordMode");
         recordBtn.textContent = enabled ? "通常表示" : "録画モード";
+        updateRecordLayout();
       });
+      window.addEventListener("resize", updateRecordLayout);
       input.addEventListener("input", () => {
         const result = parseParticipants();
         count.textContent = `${result.parsed.length}名`;
