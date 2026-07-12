@@ -1,546 +1,267 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="utf-8">
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>忍者の分身 抽選</title>
 <style>
 :root{
-  --bg:#050505;
-  --panel:#0d0d0f;
-  --panel2:#141416;
-  --line:#303036;
-  --text:#f7f7f7;
-  --muted:#b8b8bf;
-  --gold:#ffd65a;
-  --red:#ff5a5a;
-  --green:#65e59b;
+  --bg:#050505;--panel:#151515;--line:#3d3425;--gold:#e5b95e;
+  --text:#fff;--muted:#bdb7ab;--danger:#a53b31;
 }
 *{box-sizing:border-box}
-html,body{margin:0;min-height:100%;background:#000;color:var(--text)}
-body{
-  font-family:"Yu Gothic","YuGothic","Meiryo",system-ui,sans-serif;
-  background:
-    radial-gradient(circle at 50% 0%,rgba(255,214,90,.10),transparent 34rem),
-    linear-gradient(180deg,#050505,#000);
-}
-button,textarea,input,select{font:inherit}
-button{
-  appearance:none;
-  border:1px solid var(--line);
-  border-radius:10px;
-  background:#18181b;
-  color:var(--text);
-  padding:12px 14px;
-  font-size:16px;
-  font-weight:800;
-  cursor:pointer;
-}
-button:hover{background:#222228}
-button:active{transform:translateY(1px)}
-button:disabled{opacity:.48;cursor:not-allowed}
-.app{max-width:1500px;margin:0 auto;padding:16px}
-.header{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:12px;
-  margin-bottom:14px;
-}
-.brand{display:flex;align-items:center;gap:12px;min-width:0}
-.logo{
-  width:76px;
-  height:76px;
-  object-fit:contain;
-  filter:drop-shadow(0 0 18px rgba(255,214,90,.25));
-}
-.title{min-width:0}
-h1{margin:0;font-size:clamp(24px,4vw,44px);line-height:1.05;letter-spacing:0}
-.subtitle{margin-top:5px;color:var(--muted);font-size:14px;font-weight:700}
-.toolbar{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
-.recordBtn.active{
-  border-color:rgba(101,229,155,.75);
-  background:rgba(101,229,155,.16);
-  color:#dfffe9;
-}
-.wrap{display:grid;grid-template-columns:380px 1fr;gap:16px;align-items:start}
-.panel,.stage,.footer{
-  border:1px solid var(--line);
-  border-radius:12px;
-  background:rgba(13,13,15,.94);
-  box-shadow:0 0 24px rgba(255,255,255,.035);
-}
-.panel{padding:16px}
-h2{margin:0 0 12px;font-size:22px;line-height:1.2}
-.hint{margin:0 0 10px;color:var(--muted);font-size:13px;line-height:1.45}
-textarea{
-  width:100%;
-  height:290px;
-  resize:vertical;
-  background:#08080a;
-  color:var(--text);
-  border:1px solid #3c3c42;
-  border-radius:10px;
-  padding:12px;
-  font-size:18px;
-  line-height:1.5;
-  outline:none;
-}
-textarea:focus{border-color:rgba(255,214,90,.75)}
-.row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
-.start{
-  width:100%;
-  margin-top:14px;
-  background:linear-gradient(135deg,#ffe989,#f4b928);
-  color:#111;
-  border:0;
-  font-size:22px;
-  padding:15px;
-}
-.count{
-  text-align:right;
-  margin-top:10px;
-  color:#e4e4e4;
-  font-weight:900;
-}
-.err{
-  display:none;
-  margin-top:10px;
-  padding:10px;
-  border:1px solid #863333;
-  background:#240707;
-  color:#ffc0c0;
-  border-radius:8px;
-  font-weight:800;
-  line-height:1.45;
-}
-.stage{padding:18px;min-height:560px}
-.grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(130px,1fr));
-  gap:30px 18px;
-}
-.grid.dense{grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:20px 10px}
-.grid.veryDense{grid-template-columns:repeat(auto-fit,minmax(74px,1fr));gap:14px 6px}
-.card{position:relative;text-align:center;min-height:226px}
-.figbox{height:158px;display:flex;align-items:end;justify-content:center}
-.fig{max-width:150px;max-height:154px;object-fit:contain;filter:drop-shadow(0 8px 8px rgba(0,0,0,.55))}
-.no{display:block;margin-top:10px;font-size:22px;font-weight:900}
-.name{display:block;margin-top:4px;font-size:20px;font-weight:900;line-height:1.2;word-break:break-word}
-.grid.dense .card{min-height:174px}
-.grid.dense .figbox{height:114px}
-.grid.dense .fig{max-width:105px;max-height:110px}
-.grid.dense .no{font-size:16px;margin-top:7px}
-.grid.dense .name{font-size:14px}
-.grid.veryDense .card{min-height:134px}
-.grid.veryDense .figbox{height:84px}
-.grid.veryDense .fig{max-width:76px;max-height:80px}
-.grid.veryDense .no{font-size:12px;margin-top:5px}
-.grid.veryDense .name{font-size:11px}
-.smoke{
-  position:absolute;
-  inset:0;
-  opacity:0;
-  pointer-events:none;
-  filter:blur(7px);
-  background:
-    radial-gradient(circle at 40% 42%,rgba(255,255,255,.95) 0 12%,transparent 30%),
-    radial-gradient(circle at 56% 54%,rgba(255,255,255,.82) 0 18%,transparent 42%),
-    radial-gradient(circle at 65% 36%,rgba(255,255,255,.65) 0 13%,transparent 32%);
-}
-.card.out{animation:vanish .72s ease forwards}
-.card.out .smoke{animation:smoke .72s ease forwards}
-.card.hide{display:none}
-.card.win{transform:scale(1.1);filter:drop-shadow(0 0 26px var(--gold))}
-@keyframes smoke{
-  0%{opacity:0;transform:scale(.4)}
-  30%{opacity:1}
-  100%{opacity:0;transform:scale(1.8) translateY(-34px)}
-}
-@keyframes vanish{
-  0%{opacity:1;transform:scale(1)}
-  62%{opacity:.28;transform:scale(.9)}
-  100%{opacity:0;transform:scale(.5)}
-}
-.footer{
-  margin-top:16px;
-  padding:14px;
-  display:grid;
-  grid-template-columns:1fr 1fr 2fr;
-  gap:10px;
-  align-items:center;
-}
-.winner{font-size:22px;font-weight:900;color:var(--gold);text-align:center}
-.overlay{
-  display:none;
-  position:fixed;
-  inset:0;
-  z-index:99;
-  align-items:center;
-  justify-content:center;
-  text-align:center;
-  padding:20px;
-  background:rgba(0,0,0,.90);
-}
-.modal{
-  border:2px solid var(--gold);
-  border-radius:18px;
-  padding:32px;
-  background:#050505;
-  max-width:760px;
-  width:100%;
-  box-shadow:0 0 50px rgba(255,214,90,.18);
-}
-.modalTitle{font-size:clamp(44px,8vw,72px);font-weight:900;color:var(--gold);line-height:1}
-.modalName{font-size:clamp(30px,6vw,52px);font-weight:900;margin-top:14px;line-height:1.25}
-body.recordMode{
-  min-height:100dvh;
-  display:grid;
-  place-items:center;
-  overflow:hidden;
-}
-body.recordMode .app{
-  width:min(100vw,calc(100dvh * 9 / 16));
-  height:min(100dvh,calc(100vw * 16 / 9));
-  padding:10px;
-  display:flex;
-  flex-direction:column;
-  overflow:hidden;
-}
-body.recordMode .header{margin-bottom:8px}
-body.recordMode .logo{width:52px;height:52px}
-body.recordMode h1{font-size:24px}
-body.recordMode .subtitle{display:none}
-body.recordMode .wrap{
-  flex:1 1 auto;
-  min-height:0;
-  grid-template-columns:1fr;
-  gap:8px;
-}
-body.recordMode .panel{
-  padding:8px;
-  display:grid;
-  grid-template-columns:1fr auto;
-  gap:8px;
-  align-items:end;
-}
-body.recordMode .panel h2,
-body.recordMode .panel .hint,
-body.recordMode .panel .row,
-body.recordMode .panel .err{display:none}
-body.recordMode textarea{height:64px;min-height:64px;font-size:12px}
-body.recordMode .count{margin:0;text-align:left;font-size:12px}
-body.recordMode .start{margin:0;font-size:15px;padding:12px;min-width:132px}
-body.recordMode .stage{
-  min-height:0;
-  overflow:hidden;
-  padding:8px;
-}
-body.recordMode .grid{
-  height:100%;
-  align-content:start;
-  grid-template-columns:repeat(auto-fit,minmax(32px,1fr));
-  gap:3px 2px;
-}
-body.recordMode .card{min-height:43px}
-body.recordMode .figbox{height:27px}
-body.recordMode .fig{max-width:26px;max-height:26px}
-body.recordMode .no{font-size:8px;margin-top:1px;line-height:1}
-body.recordMode .name{font-size:7px;margin-top:0;line-height:1.05}
-body.recordMode .footer{margin-top:8px;padding:8px;grid-template-columns:1fr 1fr;gap:8px}
-body.recordMode .winner{grid-column:1 / -1;font-size:15px}
-@media(max-width:900px){
-  .app{padding:12px}
-  .header{align-items:flex-start;flex-direction:column}
-  .toolbar{justify-content:flex-start}
-  .wrap{grid-template-columns:1fr}
-  .footer{grid-template-columns:1fr}
-  textarea{height:220px;font-size:16px}
-  .stage{min-height:420px;padding:12px}
-  .grid{grid-template-columns:repeat(auto-fit,minmax(88px,1fr));gap:18px 8px}
-  .figbox{height:116px}
-  .fig{max-width:106px;max-height:112px}
-  .no{font-size:17px}
-  .name{font-size:15px}
+html,body{margin:0;min-height:100%;background:radial-gradient(circle at 50% 0,#242018 0,#090909 42%,#000 100%);color:var(--text);font-family:"Yu Mincho","Hiragino Mincho ProN","Yu Gothic","Hiragino Kaku Gothic ProN",serif}
+body{min-height:100vh;overflow-x:hidden}
+button,select,textarea,input{font:inherit}
+button{cursor:pointer}
+.app{width:min(1400px,100%);margin:auto;padding:18px 16px 32px}
+.header{text-align:center;margin-bottom:14px}
+.title{font-size:clamp(30px,5vw,64px);margin:0;letter-spacing:.1em;text-shadow:0 3px 0 #000,0 0 18px rgba(229,185,94,.35)}
+.subtitle{color:var(--gold);font-size:clamp(13px,2vw,20px);letter-spacing:.22em;margin-top:4px}
+.setup{display:grid;grid-template-columns:minmax(300px,430px) 1fr;gap:16px;align-items:start}
+.panel{background:rgba(18,18,18,.94);border:1px solid var(--line);border-radius:16px;box-shadow:0 12px 35px #0008;padding:16px}
+.panel h2{margin:0 0 10px;font-size:20px}
+.help{color:var(--muted);font-size:13px;line-height:1.7}
+textarea{width:100%;height:250px;resize:vertical;background:#070707;color:#fff;border:1px solid #544830;border-radius:10px;padding:12px;line-height:1.55}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.count{margin-left:auto;color:var(--gold);font-weight:700}
+select,button{border:1px solid #65573c;border-radius:9px;background:#242018;color:#fff;padding:10px 13px}
+button.primary{background:linear-gradient(#c89c45,#8d5e18);border-color:#f0ca7e;color:#100b04;font-weight:800}
+button.danger{background:#3a1512;border-color:#8d453d}
+button:disabled{opacity:.45;cursor:not-allowed}
+.stage-panel{min-height:470px}
+.stage-toolbar{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:10px}
+.stage{position:relative;min-height:390px;border-radius:14px;border:1px solid #403727;background:
+radial-gradient(circle at center,#251f16 0,#0b0b0b 52%,#020202 100%);overflow:hidden;padding:12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(92px,1fr));gap:9px;align-content:start}
+.card{position:relative;min-width:0;background:linear-gradient(180deg,#211d17,#0a0a0a);border:1px solid #51442e;border-radius:11px;padding:6px 5px 7px;text-align:center;transition:transform .4s,opacity .6s,filter .6s}
+.card img{width:100%;height:88px;object-fit:contain;display:block;filter:drop-shadow(0 5px 4px #000)}
+.card .fallback{height:88px;display:none;align-items:center;justify-content:center;font-size:58px}
+.card .num{font-weight:800;color:var(--gold);font-size:13px;white-space:nowrap}
+.card .name{font-weight:800;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.card.eliminating{animation:shake .28s linear 3}
+.card.gone{opacity:0;transform:scale(.25) rotate(13deg);filter:blur(7px)}
+.smoke{position:absolute;inset:0;display:none;place-items:center;pointer-events:none;font-size:70px;filter:drop-shadow(0 0 10px #fff)}
+.card.eliminating .smoke{display:grid;animation:smoke .8s ease-out forwards}
+.status{text-align:center;margin-top:10px;min-height:30px;font-size:clamp(18px,2.4vw,30px);font-weight:800;color:var(--gold)}
+.winner-overlay{position:fixed;inset:0;z-index:30;display:none;place-items:center;background:rgba(0,0,0,.82);padding:20px}
+.winner-overlay.show{display:grid;animation:fade .3s}
+.winner-box{width:min(640px,95vw);text-align:center;background:radial-gradient(circle,#392a13,#080808 66%);border:2px solid var(--gold);border-radius:24px;padding:24px;box-shadow:0 0 70px #dca94066}
+.winner-label{font-size:clamp(22px,4vw,42px);color:var(--gold);letter-spacing:.18em}
+.winner-name{font-size:clamp(38px,8vw,86px);font-weight:900;margin:12px 0}
+.winner-num{font-size:clamp(22px,4vw,38px)}
+.recording .setup .panel:first-child,.recording .header,.recording .stage-toolbar .non-record,.recording footer{display:none!important}
+.recording .setup{display:block}
+.recording .stage-panel{border:0;background:transparent;box-shadow:none;padding:0;min-height:100vh}
+.recording .stage{border:0;border-radius:0;min-height:calc(100vh - 58px);padding:8px}
+.recording .grid{grid-template-columns:repeat(auto-fit,minmax(72px,1fr));gap:5px}
+.recording .card{padding:3px}
+.recording .card img,.recording .card .fallback{height:clamp(50px,10vh,100px)}
+.recording .card .num{font-size:clamp(10px,1.4vw,14px)}
+.recording .card .name{font-size:clamp(10px,1.45vw,15px)}
+.record-exit{display:none!important}
+.recording .record-exit{display:inline-block!important;position:fixed;right:10px;top:10px;z-index:40;opacity:.28}
+.recording .record-exit:hover{opacity:1}
+footer{text-align:center;color:#7d776c;font-size:12px;margin-top:14px}
+@keyframes shake{25%{transform:translateX(-4px) rotate(-2deg)}75%{transform:translateX(4px) rotate(2deg)}}
+@keyframes smoke{0%{opacity:0;transform:scale(.2)}35%{opacity:1}100%{opacity:0;transform:scale(1.8)}}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@media(max-width:800px){
+ .app{padding:10px 8px 18px}.setup{grid-template-columns:1fr}.stage-panel{min-height:420px}
+ textarea{height:190px}.grid{grid-template-columns:repeat(auto-fit,minmax(76px,1fr));gap:6px}
+ .card img,.card .fallback{height:70px}.card .name{font-size:12px}.card .num{font-size:11px}
 }
 </style>
 </head>
 <body>
+<button id="exitRecord" class="record-exit">録画モード終了</button>
 <div class="app">
-  <header class="header">
-    <div class="brand">
-      <img class="logo" src="assets/ninja-cutout.png" alt="忍者の分身">
-      <div class="title">
-        <h1>忍者の分身 抽選</h1>
-        <div class="subtitle">煙とともに分身が消え、最後に残った者が当選者です。</div>
-      </div>
-    </div>
-    <div class="toolbar">
-      <button type="button" id="recordBtn" class="recordBtn">録画サイズ</button>
-    </div>
-  </header>
+<header class="header">
+  <h1 class="title">本物の忍者は誰だ！？</h1>
+  <div class="subtitle">忍者の分身 抽選</div>
+</header>
 
-  <div class="wrap">
-    <section class="panel">
-      <div>
-        <h2>参加者を入力（最大100体）</h2>
-        <p class="hint">1行に「番号,名前」で入力してください。タブ区切りや「番号 名前」でも読み込めます。</p>
-        <textarea id="input" spellcheck="false"></textarea>
-        <div class="count" id="count">0体</div>
-        <div class="row">
-          <button type="button" id="clearBtn">クリア</button>
-          <button type="button" id="sampleBtn">サンプル</button>
-        </div>
-      </div>
-      <button type="button" class="start" id="startBtn">抽選を開始する</button>
-      <div class="err" id="err"></div>
-    </section>
-
-    <section class="stage">
-      <div class="grid" id="grid"></div>
-    </section>
+<div class="setup">
+<section class="panel">
+  <h2>参加者入力（最大80名）</h2>
+  <div class="help">1行につき「忍番号,名前」。Excelの2列貼り付け（タブ区切り）にも対応。41〜50忍は猿、それ以外は忍者で表示します。</div>
+  <textarea id="input" placeholder="1,ヨッシー&#10;2,やまだ"></textarea>
+  <div class="row">
+    <button id="clearBtn">クリア</button>
+    <button id="sampleBtn">サンプル</button>
+    <span class="count" id="count">0名</span>
   </div>
+  <div class="row">
+    <label>決定まで
+      <select id="duration">
+        <option value="8">8秒</option>
+        <option value="12" selected>12秒</option>
+        <option value="15">15秒</option>
+        <option value="20">20秒</option>
+        <option value="30">30秒</option>
+      </select>
+    </label>
+    <button id="startBtn" class="primary">抽選を開始する</button>
+  </div>
+</section>
 
-  <footer class="footer">
-    <button type="button" id="pauseBtn">一時停止</button>
-    <button type="button" id="resetBtn">リセット</button>
-    <div class="winner">当選者：<span id="winner">---</span></div>
-  </footer>
+<section class="panel stage-panel">
+  <div class="stage-toolbar">
+    <button id="recordBtn" class="primary">📹 録画用画面</button>
+    <button id="pauseBtn" class="non-record" disabled>一時停止</button>
+    <button id="resetBtn" class="danger non-record">リセット</button>
+    <button id="fullscreenBtn" class="non-record">全画面</button>
+  </div>
+  <div class="stage" id="stage">
+    <div class="grid" id="grid"></div>
+  </div>
+  <div class="status" id="status">参加者を入力してください</div>
+</section>
+</div>
+<footer>最大80名対応・録画モード搭載</footer>
 </div>
 
-<div class="overlay" id="overlay">
-  <div class="modal">
-    <div class="modalTitle">当選</div>
-    <div class="modalName" id="modalName">---</div>
-    <button type="button" id="closeBtn" style="margin-top:24px;">閉じる</button>
+<div class="winner-overlay" id="winnerOverlay">
+  <div class="winner-box">
+    <div class="winner-label">当選者</div>
+    <div class="winner-name" id="winnerName">---</div>
+    <div class="winner-num" id="winnerNum">---</div>
+    <div class="row" style="justify-content:center;margin-top:18px">
+      <button id="closeWinner" class="primary">閉じる</button>
+    </div>
   </div>
 </div>
 
 <script>
-(function(){
-  var MAX_PARTICIPANTS = 100;
-  var MONKEY_START = 41;
-  var MONKEY_END = 50;
-  var IMG_NINJA = "assets/ninja-cutout.png";
-  var IMG_MONKEY = "assets/monkey-cutout.png";
-  var STORAGE_KEY = "bunshin_lottery_input_v3";
-  var RECORD_KEY = "bunshin_lottery_record_mode_v1";
+(()=>{
+"use strict";
+const $=s=>document.querySelector(s);
+const input=$("#input"), count=$("#count"), grid=$("#grid"), status=$("#status");
+const startBtn=$("#startBtn"), pauseBtn=$("#pauseBtn"), resetBtn=$("#resetBtn");
+const overlay=$("#winnerOverlay"), winnerName=$("#winnerName"), winnerNum=$("#winnerNum");
+const NINJA_IMG="IMG_2231-removebg-preview%20(1).png";
+const MONKEY_IMG="IMG_3090_1-removebg-preview%20(1).png";
+let participants=[], active=[], timer=null, running=false, paused=false, endAt=0, nextAt=0;
 
-  var input = document.getElementById("input");
-  var grid = document.getElementById("grid");
-  var count = document.getElementById("count");
-  var err = document.getElementById("err");
-  var winner = document.getElementById("winner");
-  var overlay = document.getElementById("overlay");
-  var modalName = document.getElementById("modalName");
-  var startBtn = document.getElementById("startBtn");
-  var pauseBtn = document.getElementById("pauseBtn");
-  var recordBtn = document.getElementById("recordBtn");
-  var participants = [];
-  var timer = null;
-  var running = false;
-  var paused = false;
-
-  function escapeHtml(s){
-    return String(s).replace(/[&<>"']/g,function(c){
-      return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c];
-    });
-  }
-
-  function parse(){
-    var lines = input.value.split(/\r?\n/);
-    var arr = [];
-    var errors = [];
-    for(var i=0;i<lines.length;i++){
-      var raw = lines[i].trim();
-      if(!raw) continue;
-      var parts;
-      if(raw.indexOf("\t") >= 0) parts = raw.split("\t");
-      else if(raw.indexOf(",") >= 0) parts = raw.split(",");
-      else if(raw.indexOf("，") >= 0) parts = raw.split("，");
-      else {
-        var m = raw.match(/^(\d+)\s+(.+)$/);
-        parts = m ? [m[1],m[2]] : [raw,""];
-      }
-
-      var n = Number(String(parts[0] || "").replace(/[^\d]/g,"").trim());
-      var name = parts.slice(1).join(" ").trim() || "忍者の分身";
-      if(!Number.isInteger(n) || n <= 0){
-        errors.push((i+1) + "行目");
-        continue;
-      }
-      arr.push({
-        number:n,
-        name:name,
-        img:(n >= MONKEY_START && n <= MONKEY_END) ? IMG_MONKEY : IMG_NINJA,
-        alive:true
-      });
-    }
-    return {arr:arr,errors:errors};
-  }
-
-  function showErr(msg){
-    err.style.display = msg ? "block" : "none";
-    err.textContent = msg || "";
-  }
-
-  function setCount(text){
-    count.textContent = text;
-  }
-
-  function render(){
-    grid.innerHTML = "";
-    grid.className = "grid";
-    if(participants.length > 70) grid.classList.add("veryDense");
-    else if(participants.length > 36) grid.classList.add("dense");
-
-    for(var i=0;i<participants.length;i++){
-      var p = participants[i];
-      var div = document.createElement("div");
-      div.className = "card";
-      div.setAttribute("data-index", i);
-      div.innerHTML =
-        '<div class="figbox"><img class="fig" src="'+p.img+'" alt=""></div>'+
-        '<span class="no">'+escapeHtml(p.number)+'番</span>'+
-        '<span class="name">'+escapeHtml(p.name)+'</span>'+
-        '<div class="smoke"></div>';
-      grid.appendChild(div);
-    }
-    setCount(participants.length + "体が参加中");
-  }
-
-  function apply(){
-    clearTimeout(timer);
-    running = false;
-    paused = false;
-    startBtn.disabled = false;
-    pauseBtn.textContent = "一時停止";
-    winner.textContent = "---";
-    overlay.style.display = "none";
-
-    var p = parse();
-    participants = p.arr;
-    if(p.errors.length) showErr("番号が正しくない行があります：" + p.errors.join("、"));
-    else if(participants.length < 2) showErr("参加者を2体以上入力してください。");
-    else if(participants.length > MAX_PARTICIPANTS) showErr("参加者は最大" + MAX_PARTICIPANTS + "体までです。現在 " + participants.length + "体 入力されています。");
-    else showErr("");
-
-    render();
-    try{ localStorage.setItem(STORAGE_KEY, input.value); }catch(e){}
-  }
-
-  function alive(){
-    return participants.filter(function(p){return p.alive;});
-  }
-
-  function drawDelay(remaining){
-    if(remaining > 70) return 150;
-    if(remaining > 40) return 210;
-    if(remaining > 20) return 280;
-    if(remaining > 8) return 380;
-    return 520;
-  }
-
-  function step(){
-    if(!running || paused) return;
-    var a = alive();
-    if(a.length <= 1) return finish();
-
-    var victim = a[Math.floor(Math.random()*a.length)];
-    victim.alive = false;
-    var idx = participants.indexOf(victim);
-    var card = document.querySelector('.card[data-index="'+idx+'"]');
-    if(card){
-      card.classList.add("out");
-      setTimeout(function(c){ c.classList.add("hide"); }, 760, card);
-    }
-
-    var remain = a.length - 1;
-    setCount("残り " + remain + "体");
-    timer = setTimeout(step, drawDelay(remain));
-  }
-
-  function start(){
-    apply();
-    if(participants.length < 2 || participants.length > MAX_PARTICIPANTS || err.style.display === "block") return;
-    running = true;
-    paused = false;
-    startBtn.disabled = true;
-    timer = setTimeout(step, 500);
-  }
-
-  function finish(){
-    clearTimeout(timer);
-    running = false;
-    paused = false;
-    startBtn.disabled = false;
-    pauseBtn.textContent = "一時停止";
-
-    var a = alive();
-    if(!a.length) return;
-    var w = a[0];
-    var idx = participants.indexOf(w);
-    var card = document.querySelector('.card[data-index="'+idx+'"]');
-    if(card) card.classList.add("win");
-
-    var text = w.number + "番　" + w.name;
-    winner.textContent = text;
-    modalName.textContent = text;
-    setCount("当選：" + text);
-    overlay.style.display = "flex";
-  }
-
-  function sample(){
-    input.value = [
-      "1,田中太郎",
-      "7,佐藤花子",
-      "15,鈴木一郎",
-      "23,山田次郎",
-      "41,伊藤健",
-      "45,中村美咲",
-      "52,小林三郎",
-      "100,渡辺直樹"
-    ].join("\n");
-    apply();
-  }
-
-  function setRecordMode(on){
-    document.body.classList.toggle("recordMode", on);
-    recordBtn.classList.toggle("active", on);
-    recordBtn.textContent = on ? "通常サイズ" : "録画サイズ";
-    try{ localStorage.setItem(RECORD_KEY, on ? "1" : "0"); }catch(e){}
-  }
-
-  document.getElementById("startBtn").onclick = start;
-  document.getElementById("resetBtn").onclick = apply;
-  document.getElementById("clearBtn").onclick = function(){ input.value = ""; apply(); };
-  document.getElementById("sampleBtn").onclick = sample;
-  document.getElementById("closeBtn").onclick = function(){ overlay.style.display = "none"; };
-  document.getElementById("pauseBtn").onclick = function(){
-    if(!running) return;
-    paused = !paused;
-    pauseBtn.textContent = paused ? "再開" : "一時停止";
-    if(!paused) timer = setTimeout(step, 100);
-  };
-  recordBtn.onclick = function(){
-    setRecordMode(!document.body.classList.contains("recordMode"));
-  };
-  input.oninput = function(){
-    var p = parse();
-    participants = p.arr;
-    if(p.arr.length > MAX_PARTICIPANTS) setCount("最大" + MAX_PARTICIPANTS + "体まで（現在 " + p.arr.length + "体）");
-    else setCount(p.arr.length + "体が参加予定");
-    try{ localStorage.setItem(STORAGE_KEY, input.value); }catch(e){}
-  };
-
-  try{
-    var saved = localStorage.getItem(STORAGE_KEY);
-    if(saved) input.value = saved;
-  }catch(e){}
-  if(!input.value.trim()) sample();
-  else apply();
-
-  try{ setRecordMode(localStorage.getItem(RECORD_KEY) === "1"); }catch(e){}
+function parse(){
+ const lines=input.value.replace(/\r/g,"").split("\n").map(v=>v.trim()).filter(Boolean);
+ const out=[], seen=new Set();
+ for(const line of lines){
+   let parts=line.includes("\t")?line.split("\t"):line.split(",");
+   if(parts.length<2) continue;
+   const num=parseInt(String(parts.shift()).replace(/[^\d]/g,""),10);
+   const name=parts.join(",").trim();
+   if(!Number.isFinite(num)||!name) continue;
+   const key=num+"|"+name;
+   if(!seen.has(key)){seen.add(key);out.push({num,name});}
+   if(out.length>=80) break;
+ }
+ return out;
+}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));}
+function updateCount(){
+ const n=parse().length; count.textContent=n+"名";
+ if(!running) renderPreview();
+}
+function cardHTML(p,i){
+ const monkey=p.num>=41&&p.num<=50;
+ return `<div class="card" data-i="${i}">
+   <img src="${monkey?MONKEY_IMG:NINJA_IMG}" alt="${monkey?"猿":"忍者"}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+   <div class="fallback">${monkey?"🐒":"🥷"}</div>
+   <div class="smoke">☁️</div>
+   <div class="num">${p.num}忍</div><div class="name" title="${esc(p.name)}">${esc(p.name)}</div>
+ </div>`;
+}
+function render(list){
+ grid.innerHTML=list.map(cardHTML).join("");
+ fitGrid(list.length);
+}
+function fitGrid(n){
+ if(!n)return;
+ const w=$("#stage").clientWidth-20, h=$("#stage").clientHeight-20;
+ const cols=Math.ceil(Math.sqrt(n*w/Math.max(h,1)));
+ const safe=Math.max(3,Math.min(n,cols));
+ grid.style.gridTemplateColumns=`repeat(${safe},minmax(0,1fr))`;
+}
+function renderPreview(){
+ participants=parse(); render(participants);
+ status.textContent=participants.length?`${participants.length}名の参加者`:"参加者を入力してください";
+}
+function start(){
+ participants=parse();
+ if(participants.length<2){alert("参加者を2名以上入力してください。");return;}
+ active=participants.map((p,i)=>({...p,id:i}));
+ render(active); running=true;paused=false;
+ startBtn.disabled=true;input.disabled=true;pauseBtn.disabled=false;pauseBtn.textContent="一時停止";
+ const seconds=Number($("#duration").value)||12;
+ endAt=performance.now()+seconds*1000;
+ nextAt=performance.now()+Math.max(180,(seconds*1000)/(active.length-1));
+ status.textContent="抽選中…";
+ timer=requestAnimationFrame(tick);
+}
+function tick(now){
+ if(!running)return;
+ if(paused){timer=requestAnimationFrame(tick);return;}
+ const remain=Math.max(0,endAt-now);
+ status.textContent=`抽選中… 残り ${(remain/1000).toFixed(1)}秒`;
+ if(active.length>1 && (now>=nextAt || remain<500)){
+   eliminateOne();
+   const remainingSteps=Math.max(1,active.length-1);
+   nextAt=now+Math.max(120,(endAt-now)/remainingSteps);
+ }
+ if(active.length===1 || now>=endAt){
+   while(active.length>1) eliminateOne(true);
+   finish();return;
+ }
+ timer=requestAnimationFrame(tick);
+}
+function eliminateOne(immediate=false){
+ if(active.length<=1)return;
+ const idx=Math.floor(Math.random()*active.length);
+ const cards=[...grid.children], card=cards[idx];
+ if(card&&!immediate){
+   card.classList.add("eliminating");
+   setTimeout(()=>card.classList.add("gone"),260);
+   setTimeout(()=>{active.splice(idx,1);render(active);},760);
+ }else{
+   active.splice(idx,1);render(active);
+ }
+}
+function finish(){
+ running=false;cancelAnimationFrame(timer);timer=null;
+ startBtn.disabled=false;input.disabled=false;pauseBtn.disabled=true;
+ const w=active[0];
+ render(active);
+ status.textContent=`当選者：${w.name}（${w.num}忍）`;
+ winnerName.textContent=w.name;winnerNum.textContent=w.num+"忍";overlay.classList.add("show");
+ try{navigator.vibrate&&navigator.vibrate([120,70,180]);}catch(e){}
+}
+function reset(){
+ running=false;paused=false;cancelAnimationFrame(timer);timer=null;
+ input.disabled=false;startBtn.disabled=false;pauseBtn.disabled=true;pauseBtn.textContent="一時停止";
+ overlay.classList.remove("show");renderPreview();
+}
+function togglePause(){
+ if(!running)return;paused=!paused;pauseBtn.textContent=paused?"再開":"一時停止";status.textContent=paused?"一時停止中":"抽選中…";
+}
+function enterRecording(){
+ document.body.classList.add("recording");renderPreview();
+ setTimeout(()=>{fitGrid(parse().length);window.scrollTo(0,0);},100);
+}
+function exitRecording(){document.body.classList.remove("recording");renderPreview();}
+input.addEventListener("input",updateCount);
+$("#clearBtn").onclick=()=>{input.value="";updateCount();input.focus();};
+$("#sampleBtn").onclick=()=>{input.value="1,ヨッシー\n2,やまだ\n3,みらくる☆桃香\n41,オッス\n42,桜川俊信";updateCount();};
+startBtn.onclick=start;pauseBtn.onclick=togglePause;resetBtn.onclick=reset;
+$("#recordBtn").onclick=enterRecording;$("#exitRecord").onclick=exitRecording;
+$("#closeWinner").onclick=()=>overlay.classList.remove("show");
+$("#fullscreenBtn").onclick=async()=>{try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();else await document.exitFullscreen();}catch(e){}};
+window.addEventListener("resize",()=>fitGrid((running?active:parse()).length));
+document.addEventListener("keydown",e=>{
+ if(e.key==="Escape"&&document.body.classList.contains("recording"))exitRecording();
+ if(e.code==="Space"&&running){e.preventDefault();togglePause();}
+});
+updateCount();
 })();
 </script>
 </body>
