@@ -108,7 +108,8 @@ footer{text-align:center;color:#7d776c;font-size:12px;margin-top:14px}
 <section class="panel stage-panel">
   <div class="stage-toolbar">
     <button id="recordBtn" class="primary">📹 録画用画面</button>
-    <button id="pauseBtn" class="non-record" disabled>一時停止</button>
+    <button id="recordStartBtn" class="primary record-only">▶ 抽選を開始する</button>
+    <button id="pauseBtn" class="non-record record-only" disabled>一時停止</button>
     <button id="resetBtn" class="danger non-record">リセット</button>
     <button id="fullscreenBtn" class="non-record">全画面</button>
   </div>
@@ -178,10 +179,31 @@ function render(list){
 }
 function fitGrid(n){
  if(!n)return;
- const w=$("#stage").clientWidth-20, h=$("#stage").clientHeight-20;
- const cols=Math.ceil(Math.sqrt(n*w/Math.max(h,1)));
- const safe=Math.max(3,Math.min(n,cols));
- grid.style.gridTemplateColumns=`repeat(${safe},minmax(0,1fr))`;
+ const stage=$("#stage");
+ const w=Math.max(1,stage.clientWidth-10), h=Math.max(1,stage.clientHeight-10);
+ let best={cols:1,rows:n,score:0,cellW:w,cellH:h/n};
+ for(let cols=1;cols<=n;cols++){
+   const rows=Math.ceil(n/cols);
+   const cellW=(w-(cols-1)*3)/cols;
+   const cellH=(h-(rows-1)*3)/rows;
+   const score=Math.min(cellW/1.05,cellH);
+   if(score>best.score) best={cols,rows,score,cellW,cellH};
+ }
+ grid.style.gridTemplateColumns=`repeat(${best.cols},minmax(0,1fr))`;
+ grid.style.gridTemplateRows=`repeat(${best.rows},minmax(0,1fr))`;
+ if(document.body.classList.contains("recording")){
+   const imgH=Math.max(18,Math.floor(best.cellH*0.64));
+   const numSize=Math.max(7,Math.min(14,Math.floor(best.cellH*0.13)));
+   const nameSize=Math.max(7,Math.min(15,Math.floor(best.cellH*0.14)));
+   grid.style.setProperty("--record-img-height",imgH+"px");
+   grid.style.setProperty("--record-num-size",numSize+"px");
+   grid.style.setProperty("--record-name-size",nameSize+"px");
+ }else{
+   grid.style.removeProperty("--record-img-height");
+   grid.style.removeProperty("--record-num-size");
+   grid.style.removeProperty("--record-name-size");
+   grid.style.gridTemplateRows="";
+ }
 }
 function renderPreview(){
  participants=parse(); render(participants);
@@ -192,7 +214,7 @@ function start(){
  if(participants.length<2){alert("参加者を2名以上入力してください。");return;}
  active=participants.map((p,i)=>({...p,id:i}));
  render(active); running=true;paused=false;
- startBtn.disabled=true;input.disabled=true;pauseBtn.disabled=false;pauseBtn.textContent="一時停止";
+ startBtn.disabled=true;$("#recordStartBtn").disabled=true;input.disabled=true;pauseBtn.disabled=false;pauseBtn.textContent="一時停止";
  const seconds=Number($("#duration").value)||12;
  endAt=performance.now()+seconds*1000;
  nextAt=performance.now()+Math.max(180,(seconds*1000)/(active.length-1));
@@ -229,7 +251,7 @@ function eliminateOne(immediate=false){
 }
 function finish(){
  running=false;cancelAnimationFrame(timer);timer=null;
- startBtn.disabled=false;input.disabled=false;pauseBtn.disabled=true;
+ startBtn.disabled=false;$("#recordStartBtn").disabled=false;input.disabled=false;pauseBtn.disabled=true;
  const w=active[0];
  render(active);
  status.textContent=`当選者：${w.name}（${w.num}忍）`;
@@ -238,21 +260,24 @@ function finish(){
 }
 function reset(){
  running=false;paused=false;cancelAnimationFrame(timer);timer=null;
- input.disabled=false;startBtn.disabled=false;pauseBtn.disabled=true;pauseBtn.textContent="一時停止";
+ input.disabled=false;startBtn.disabled=false;$("#recordStartBtn").disabled=false;pauseBtn.disabled=true;pauseBtn.textContent="一時停止";
  overlay.classList.remove("show");renderPreview();
 }
 function togglePause(){
  if(!running)return;paused=!paused;pauseBtn.textContent=paused?"再開":"一時停止";status.textContent=paused?"一時停止中":"抽選中…";
 }
 function enterRecording(){
- document.body.classList.add("recording");renderPreview();
- setTimeout(()=>{fitGrid(parse().length);window.scrollTo(0,0);},100);
+ document.body.classList.add("recording");
+ renderPreview();
+ window.scrollTo(0,0);
+ setTimeout(()=>fitGrid((running?active:parse()).length),80);
+ setTimeout(()=>fitGrid((running?active:parse()).length),250);
 }
 function exitRecording(){document.body.classList.remove("recording");renderPreview();}
 input.addEventListener("input",updateCount);
 $("#clearBtn").onclick=()=>{input.value="";updateCount();input.focus();};
 $("#sampleBtn").onclick=()=>{input.value="1,ヨッシー\n2,やまだ\n3,みらくる☆桃香\n41,オッス\n42,桜川俊信";updateCount();};
-startBtn.onclick=start;pauseBtn.onclick=togglePause;resetBtn.onclick=reset;
+startBtn.onclick=start;$("#recordStartBtn").onclick=start;pauseBtn.onclick=togglePause;resetBtn.onclick=reset;
 $("#recordBtn").onclick=enterRecording;$("#exitRecord").onclick=exitRecording;
 $("#closeWinner").onclick=()=>overlay.classList.remove("show");
 $("#fullscreenBtn").onclick=async()=>{try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();else await document.exitFullscreen();}catch(e){}};
