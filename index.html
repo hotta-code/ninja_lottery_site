@@ -72,6 +72,33 @@ footer{text-align:center;color:#7d776c;font-size:12px;margin-top:14px}
  .card img,.card .fallback{height:70px}.card .name{font-size:12px}.card .num{font-size:11px}
 }
 </style>
+
+<style id="recording-complete-fix">
+/* 録画モード最終修正：全参加者を1画面内に表示 */
+.record-only{display:none!important}
+body.recording{height:100vh!important;overflow:hidden!important}
+body.recording .app{width:100%!important;height:100vh!important;padding:0!important;margin:0!important;overflow:hidden!important}
+body.recording .header,
+body.recording .setup>.panel:first-child,
+body.recording footer{display:none!important}
+body.recording .setup{display:block!important;height:100vh!important}
+body.recording .stage-panel{display:flex!important;flex-direction:column!important;height:100vh!important;min-height:0!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;overflow:hidden!important}
+body.recording .stage-toolbar{order:2!important;flex:0 0 58px!important;height:58px!important;margin:0!important;padding:7px 8px!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:8px!important;background:linear-gradient(transparent,rgba(0,0,0,.92) 30%)!important;z-index:25!important}
+body.recording .stage-toolbar .non-record{display:none!important}
+body.recording .stage-toolbar .record-only{display:inline-block!important}
+body.recording #recordBtn{display:none!important}
+body.recording #pauseBtn.record-only{display:inline-block!important}
+body.recording .stage{order:1!important;flex:1 1 auto!important;width:100%!important;height:auto!important;min-height:0!important;padding:4px!important;border:0!important;border-radius:0!important;overflow:hidden!important}
+body.recording .grid{width:100%!important;height:100%!important;gap:3px!important;align-content:stretch!important;overflow:hidden!important}
+body.recording .card{min-width:0!important;min-height:0!important;padding:2px!important;border-radius:5px!important;overflow:hidden!important;display:flex!important;flex-direction:column!important;justify-content:center!important}
+body.recording .card img,body.recording .card .fallback{width:100%!important;height:var(--record-img-height,40px)!important;min-height:0!important;flex:1 1 auto!important;object-fit:contain!important}
+body.recording .card .num{font-size:var(--record-num-size,9px)!important;line-height:1.05!important}
+body.recording .card .name{font-size:var(--record-name-size,9px)!important;line-height:1.05!important}
+body.recording .status{display:none!important}
+.record-exit{display:none!important}
+body.recording .record-exit{display:inline-block!important;position:fixed!important;right:6px!important;top:6px!important;z-index:50!important;opacity:.25!important;padding:5px 8px!important;font-size:10px!important}
+body.recording .record-exit:hover{opacity:1!important}
+</style>
 </head>
 <body>
 <button id="exitRecord" class="record-exit">録画モード終了</button>
