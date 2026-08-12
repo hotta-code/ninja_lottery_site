@@ -139,7 +139,7 @@ body.recording .grid.finalists .card .name{font-size:var(--final-name-size,24px)
 </style>
 </head>
 <body>
-<button id="exitRecord" class="record-exit">録画モード終了</button>
+<button id="exitRecord" class="record-exit" style="display:none!important">録画モード終了</button>
 <div class="app">
 <header class="header">
   <h1 class="title">本物の忍者は誰だ！？</h1>
@@ -172,6 +172,7 @@ body.recording .grid.finalists .card .name{font-size:var(--final-name-size,24px)
   <div class="stage-toolbar">
     <button id="recordBtn" class="primary">📹 録画用画面</button>
     <button id="recordStartBtn" class="primary record-only">▶ 抽選を開始する</button>
+    <button id="recordBackBtn" class="record-only">← 通常画面に戻る</button>
     <button id="pauseBtn" class="non-record record-only" disabled>一時停止</button>
     <button id="resetBtn" class="danger non-record">リセット</button>
     <button id="fullscreenBtn" class="non-record">全画面</button>
@@ -341,8 +342,9 @@ function tick(now){
  if(active.length>1 && now>=nextAt){
    eliminateOne();
 
-   // 残り10体以下は、それまでの5倍ゆっくり消える
-   const multiplier=active.length<=10 ? 5 : 1;
+   // 残り10体以下は通常の5倍ゆっくり。
+   // 残り2体になったら、最後の1体が決まる瞬間だけさらに2倍（通常の10倍）遅くする。
+   const multiplier=active.length===2 ? 10 : (active.length<=10 ? 5 : 1);
    nextAt=now + baseInterval*multiplier;
  }
 
@@ -401,7 +403,9 @@ function finish(){
  finalMode=true;
  render(active,true);
  status.textContent=`当選者：${w.name}（${w.num}忍）`;
- winnerName.textContent=w.name;winnerNum.textContent=w.num+"忍";overlay.classList.add("show");
+ winnerName.textContent=w.name;winnerNum.textContent=w.num+"忍";
+ $("#closeWinner").textContent=document.body.classList.contains("recording")?"通常画面に戻る":"閉じる";
+ overlay.classList.add("show");
  try{navigator.vibrate&&navigator.vibrate([120,70,180]);}catch(e){}
 }
 
@@ -445,8 +449,12 @@ $("#recordStartBtn").onclick=start;
 pauseBtn.onclick=togglePause;
 resetBtn.onclick=reset;
 $("#recordBtn").onclick=enterRecording;
+$("#recordBackBtn").onclick=exitRecording;
 $("#exitRecord").onclick=exitRecording;
-$("#closeWinner").onclick=()=>overlay.classList.remove("show");
+$("#closeWinner").onclick=()=>{
+ overlay.classList.remove("show");
+ if(document.body.classList.contains("recording")) exitRecording();
+};
 $("#fullscreenBtn").onclick=async()=>{try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();else await document.exitFullscreen();}catch(e){}};
 window.addEventListener("resize",()=>fitGrid(finalMode?active.length:(running?participants.length:parse().length),finalMode));
 document.addEventListener("keydown",e=>{
