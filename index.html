@@ -31,8 +31,7 @@ button.danger{background:#3a1512;border-color:#8d453d}
 button:disabled{opacity:.45;cursor:not-allowed}
 .stage-panel{min-height:470px}
 .stage-toolbar{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:10px}
-.stage{position:relative;min-height:390px;border-radius:14px;border:1px solid #403727;background:
-radial-gradient(circle at center,#251f16 0,#0b0b0b 52%,#020202 100%);overflow:hidden;padding:12px}
+.stage{position:relative;min-height:390px;border-radius:14px;border:1px solid #403727;background:radial-gradient(circle at center,#251f16 0,#0b0b0b 52%,#020202 100%);overflow:hidden;padding:12px}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(92px,1fr));gap:9px;align-content:start}
 .card{position:relative;min-width:0;background:linear-gradient(180deg,#211d17,#0a0a0a);border:1px solid #51442e;border-radius:11px;padding:6px 5px 7px;text-align:center;transition:transform .4s,opacity .6s,filter .6s}
 .card img{width:100%;height:88px;object-fit:contain;display:block;filter:drop-shadow(0 5px 4px #000)}
@@ -40,10 +39,40 @@ radial-gradient(circle at center,#251f16 0,#0b0b0b 52%,#020202 100%);overflow:hi
 .card .num{font-weight:800;color:var(--gold);font-size:13px;white-space:nowrap}
 .card .name{font-weight:800;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .card.eliminating{animation:shake .28s linear 3}
-.card.gone{opacity:0;transform:scale(.25) rotate(13deg);filter:blur(7px)}
+.card.gone{opacity:0;transform:scale(.25) rotate(13deg);filter:blur(7px);pointer-events:none}
+/* 10人になるまでは .gone をDOMに残すので、空いた場所は詰まらない */
 .smoke{position:absolute;inset:0;display:none;place-items:center;pointer-events:none;font-size:70px;filter:drop-shadow(0 0 10px #fff)}
 .card.eliminating .smoke{display:grid;animation:smoke .8s ease-out forwards}
 .status{text-align:center;margin-top:10px;min-height:30px;font-size:clamp(18px,2.4vw,30px);font-weight:800;color:var(--gold)}
+
+/* 残り10人以下：生存者だけを詰め、ステージいっぱいに拡大 */
+.grid.finalists{
+  width:100%;
+  height:100%;
+  align-content:stretch;
+  justify-content:stretch;
+  gap:clamp(8px,1.1vw,16px);
+}
+.grid.finalists .card{
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  min-height:0;
+  padding:clamp(6px,1vw,12px);
+  border-width:2px;
+  box-shadow:0 0 20px #000a;
+}
+.grid.finalists .card img,
+.grid.finalists .card .fallback{
+  width:100%;
+  height:var(--final-img-height,180px);
+  max-height:none;
+  object-fit:contain;
+  flex:1 1 auto;
+}
+.grid.finalists .card .num{font-size:var(--final-num-size,22px)}
+.grid.finalists .card .name{font-size:var(--final-name-size,24px);white-space:normal;line-height:1.12}
+
 .winner-overlay{position:fixed;inset:0;z-index:30;display:none;place-items:center;background:rgba(0,0,0,.82);padding:20px}
 .winner-overlay.show{display:grid;animation:fade .3s}
 .winner-box{width:min(640px,95vw);text-align:center;background:radial-gradient(circle,#392a13,#080808 66%);border:2px solid var(--gold);border-radius:24px;padding:24px;box-shadow:0 0 70px #dca94066}
@@ -71,10 +100,8 @@ footer{text-align:center;color:#7d776c;font-size:12px;margin-top:14px}
  textarea{height:190px}.grid{grid-template-columns:repeat(auto-fit,minmax(76px,1fr));gap:6px}
  .card img,.card .fallback{height:70px}.card .name{font-size:12px}.card .num{font-size:11px}
 }
-</style>
 
-<style id="recording-complete-fix">
-/* 録画モード最終修正：全参加者を1画面内に表示 */
+/* 録画モード：全参加者を1画面内に表示 */
 .record-only{display:none!important}
 body.recording{height:100vh!important;overflow:hidden!important}
 body.recording .app{width:100%!important;height:100vh!important;padding:0!important;margin:0!important;overflow:hidden!important}
@@ -98,6 +125,17 @@ body.recording .status{display:none!important}
 .record-exit{display:none!important}
 body.recording .record-exit{display:inline-block!important;position:fixed!important;right:6px!important;top:6px!important;z-index:50!important;opacity:.25!important;padding:5px 8px!important;font-size:10px!important}
 body.recording .record-exit:hover{opacity:1!important}
+
+/* 録画モードでも残り10人以下は大きく表示 */
+body.recording .grid.finalists{
+  gap:clamp(5px,.8vw,12px)!important;
+}
+body.recording .grid.finalists .card img,
+body.recording .grid.finalists .card .fallback{
+  height:var(--final-img-height,180px)!important;
+}
+body.recording .grid.finalists .card .num{font-size:var(--final-num-size,22px)!important}
+body.recording .grid.finalists .card .name{font-size:var(--final-name-size,24px)!important}
 </style>
 </head>
 <body>
@@ -107,7 +145,6 @@ body.recording .record-exit:hover{opacity:1!important}
   <h1 class="title">本物の忍者は誰だ！？</h1>
   <div class="subtitle">忍者の分身 抽選</div>
 </header>
-
 <div class="setup">
 <section class="panel">
   <h2>参加者入力（最大80名）</h2>
@@ -131,7 +168,6 @@ body.recording .record-exit:hover{opacity:1!important}
     <button id="startBtn" class="primary">抽選を開始する</button>
   </div>
 </section>
-
 <section class="panel stage-panel">
   <div class="stage-toolbar">
     <button id="recordBtn" class="primary">📹 録画用画面</button>
@@ -148,7 +184,6 @@ body.recording .record-exit:hover{opacity:1!important}
 </div>
 <footer>最大80名対応・録画モード搭載</footer>
 </div>
-
 <div class="winner-overlay" id="winnerOverlay">
   <div class="winner-box">
     <div class="winner-label">当選者</div>
@@ -159,7 +194,6 @@ body.recording .record-exit:hover{opacity:1!important}
     </div>
   </div>
 </div>
-
 <script>
 (()=>{
 "use strict";
@@ -169,7 +203,9 @@ const startBtn=$("#startBtn"), pauseBtn=$("#pauseBtn"), resetBtn=$("#resetBtn");
 const overlay=$("#winnerOverlay"), winnerName=$("#winnerName"), winnerNum=$("#winnerNum");
 const NINJA_IMG="IMG_2231-removebg-preview%20(1).png";
 const MONKEY_IMG="IMG_3090_1-removebg-preview%20(1).png";
-let participants=[], active=[], timer=null, running=false, paused=false, endAt=0, nextAt=0;
+
+let participants=[], active=[], timer=null, running=false, paused=false, endAt=0, nextAt=0, baseInterval=0;
+let finalMode=false;
 
 function parse(){
  const lines=input.value.replace(/\r/g,"").split("\n").map(v=>v.trim()).filter(Boolean);
@@ -191,23 +227,54 @@ function updateCount(){
  const n=parse().length; count.textContent=n+"名";
  if(!running) renderPreview();
 }
-function cardHTML(p,i){
+function cardHTML(p){
  const monkey=p.num>=41&&p.num<=50;
- return `<div class="card" data-i="${i}">
+ return `<div class="card" data-id="${p.id}">
    <img src="${monkey?MONKEY_IMG:NINJA_IMG}" alt="${monkey?"猿":"忍者"}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
    <div class="fallback">${monkey?"🐒":"🥷"}</div>
    <div class="smoke">☁️</div>
    <div class="num">${p.num}忍</div><div class="name" title="${esc(p.name)}">${esc(p.name)}</div>
  </div>`;
 }
-function render(list){
+
+function render(list, finalists=false){
+ grid.classList.toggle("finalists",finalists);
  grid.innerHTML=list.map(cardHTML).join("");
- fitGrid(list.length);
+ fitGrid(list.length,finalists);
 }
-function fitGrid(n){
+
+function fitGrid(n, finalists=finalMode){
  if(!n)return;
  const stage=$("#stage");
  const w=Math.max(1,stage.clientWidth-10), h=Math.max(1,stage.clientHeight-10);
+
+ if(finalists && n<=10){
+   /* 10人以下は人数ごとに大きく、できるだけ画面いっぱいに */
+   let cols;
+   if(n===10 || n===9) cols=5;
+   else if(n===8 || n===7) cols=4;
+   else if(n===6 || n===5) cols=3;
+   else if(n===4 || n===3) cols=2;
+   else cols=1;
+
+   const rows=Math.ceil(n/cols);
+   const gap=Math.max(5,Math.min(16,w*0.01));
+   const cellW=(w-(cols-1)*gap)/cols;
+   const cellH=(h-(rows-1)*gap)/rows;
+
+   grid.style.gridTemplateColumns=`repeat(${cols},minmax(0,1fr))`;
+   grid.style.gridTemplateRows=`repeat(${rows},minmax(0,1fr))`;
+
+   const imgH=Math.max(80,Math.floor(cellH*0.70));
+   const numSize=Math.max(16,Math.min(34,Math.floor(Math.min(cellH,cellW)*0.12)));
+   const nameSize=Math.max(17,Math.min(38,Math.floor(Math.min(cellH,cellW)*0.14)));
+
+   grid.style.setProperty("--final-img-height",imgH+"px");
+   grid.style.setProperty("--final-num-size",numSize+"px");
+   grid.style.setProperty("--final-name-size",nameSize+"px");
+   return;
+ }
+
  let best={cols:1,rows:n,score:0,cellW:w,cellH:h/n};
  for(let cols=1;cols<=n;cols++){
    const rows=Math.ceil(n/cols);
@@ -217,8 +284,9 @@ function fitGrid(n){
    if(score>best.score) best={cols,rows,score,cellW,cellH};
  }
  grid.style.gridTemplateColumns=`repeat(${best.cols},minmax(0,1fr))`;
- grid.style.gridTemplateRows=`repeat(${best.rows},minmax(0,1fr))`;
+
  if(document.body.classList.contains("recording")){
+   grid.style.gridTemplateRows=`repeat(${best.rows},minmax(0,1fr))`;
    const imgH=Math.max(18,Math.floor(best.cellH*0.64));
    const numSize=Math.max(7,Math.min(14,Math.floor(best.cellH*0.13)));
    const nameSize=Math.max(7,Math.min(15,Math.floor(best.cellH*0.14)));
@@ -226,89 +294,161 @@ function fitGrid(n){
    grid.style.setProperty("--record-num-size",numSize+"px");
    grid.style.setProperty("--record-name-size",nameSize+"px");
  }else{
+   grid.style.gridTemplateRows="";
    grid.style.removeProperty("--record-img-height");
    grid.style.removeProperty("--record-num-size");
    grid.style.removeProperty("--record-name-size");
-   grid.style.gridTemplateRows="";
  }
 }
+
 function renderPreview(){
- participants=parse(); render(participants);
+ participants=parse().map((p,i)=>({...p,id:i}));
+ finalMode=false;
+ render(participants,false);
  status.textContent=participants.length?`${participants.length}名の参加者`:"参加者を入力してください";
 }
+
 function start(){
  participants=parse();
  if(participants.length<2){alert("参加者を2名以上入力してください。");return;}
  active=participants.map((p,i)=>({...p,id:i}));
- render(active); running=true;paused=false;
+ finalMode=active.length<=10;
+ render(active,finalMode);
+ running=true;paused=false;
  startBtn.disabled=true;$("#recordStartBtn").disabled=true;input.disabled=true;pauseBtn.disabled=false;pauseBtn.textContent="一時停止";
  const seconds=Number($("#duration").value)||12;
- endAt=performance.now()+seconds*1000;
- nextAt=performance.now()+Math.max(180,(seconds*1000)/(active.length-1));
+ const steps=Math.max(1,active.length-1);
+ baseInterval=Math.max(120,(seconds*1000)/steps);
+
+ // 残り10体になってからの9回分は、通常の5倍の間隔にする
+ const slowSteps=Math.min(9,steps);
+ const normalSteps=Math.max(0,steps-slowSteps);
+ const now=performance.now();
+ endAt=now + (normalSteps*baseInterval) + (slowSteps*baseInterval*5);
+ nextAt=now + (active.length<=10 ? baseInterval*5 : baseInterval);
+
  status.textContent="抽選中…";
  timer=requestAnimationFrame(tick);
 }
+
 function tick(now){
  if(!running)return;
  if(paused){timer=requestAnimationFrame(tick);return;}
+
  const remain=Math.max(0,endAt-now);
  status.textContent=`抽選中… 残り ${(remain/1000).toFixed(1)}秒`;
- if(active.length>1 && (now>=nextAt || remain<500)){
+
+ if(active.length>1 && now>=nextAt){
    eliminateOne();
-   const remainingSteps=Math.max(1,active.length-1);
-   nextAt=now+Math.max(120,(endAt-now)/remainingSteps);
+
+   // 残り10体以下は、それまでの5倍ゆっくり消える
+   const multiplier=active.length<=10 ? 5 : 1;
+   nextAt=now + baseInterval*multiplier;
  }
- if(active.length===1 || now>=endAt){
-   while(active.length>1) eliminateOne(true);
-   finish();return;
+
+ if(active.length===1){
+   finish();
+   return;
  }
+
  timer=requestAnimationFrame(tick);
 }
+
 function eliminateOne(immediate=false){
  if(active.length<=1)return;
+
  const idx=Math.floor(Math.random()*active.length);
- const cards=[...grid.children], card=cards[idx];
+ const victim=active[idx];
+ active.splice(idx,1);
+
+ const card=grid.querySelector(`.card[data-id="${victim.id}"]`);
+
+ if(finalMode){
+   /* 10人以下になってからは、消えるたびに残った忍者を詰め直して拡大 */
+   if(card&&!immediate){
+     card.classList.add("eliminating");
+     setTimeout(()=>card.classList.add("gone"),220);
+     setTimeout(()=>render(active,true),620);
+   }else{
+     render(active,true);
+   }
+   return;
+ }
+
+ /* 11人以上：消えたカードはDOMに残し、場所を空欄のまま保持 */
  if(card&&!immediate){
    card.classList.add("eliminating");
    setTimeout(()=>card.classList.add("gone"),260);
-   setTimeout(()=>{active.splice(idx,1);render(active);},760);
- }else{
-   active.splice(idx,1);render(active);
+ }else if(card){
+   card.classList.add("gone");
+ }
+
+ /* 11人→10人になった瞬間に、生存10人だけを詰めて大きく再配置 */
+ if(active.length===10){
+   finalMode=true;
+   if(immediate){
+     render(active,true);
+   }else{
+     setTimeout(()=>render(active,true),760);
+   }
  }
 }
+
 function finish(){
  running=false;cancelAnimationFrame(timer);timer=null;
  startBtn.disabled=false;$("#recordStartBtn").disabled=false;input.disabled=false;pauseBtn.disabled=true;
  const w=active[0];
- render(active);
+ finalMode=true;
+ render(active,true);
  status.textContent=`当選者：${w.name}（${w.num}忍）`;
  winnerName.textContent=w.name;winnerNum.textContent=w.num+"忍";overlay.classList.add("show");
  try{navigator.vibrate&&navigator.vibrate([120,70,180]);}catch(e){}
 }
+
 function reset(){
  running=false;paused=false;cancelAnimationFrame(timer);timer=null;
+ finalMode=false;
  input.disabled=false;startBtn.disabled=false;$("#recordStartBtn").disabled=false;pauseBtn.disabled=true;pauseBtn.textContent="一時停止";
  overlay.classList.remove("show");renderPreview();
 }
 function togglePause(){
- if(!running)return;paused=!paused;pauseBtn.textContent=paused?"再開":"一時停止";status.textContent=paused?"一時停止中":"抽選中…";
+ if(!running)return;
+ paused=!paused;
+ pauseBtn.textContent=paused?"再開":"一時停止";
+ status.textContent=paused?"一時停止中":"抽選中…";
 }
 function enterRecording(){
  document.body.classList.add("recording");
- renderPreview();
+ if(running){
+   if(finalMode) render(active,true);
+   else fitGrid(participants.length,false);
+ }else{
+   renderPreview();
+ }
  window.scrollTo(0,0);
- setTimeout(()=>fitGrid((running?active:parse()).length),80);
- setTimeout(()=>fitGrid((running?active:parse()).length),250);
+ setTimeout(()=>fitGrid(finalMode?active.length:(running?participants.length:parse().length),finalMode),80);
+ setTimeout(()=>fitGrid(finalMode?active.length:(running?participants.length:parse().length),finalMode),250);
 }
-function exitRecording(){document.body.classList.remove("recording");renderPreview();}
+function exitRecording(){
+ document.body.classList.remove("recording");
+ if(running){
+   if(finalMode) render(active,true);
+   else fitGrid(participants.length,false);
+ }else renderPreview();
+}
+
 input.addEventListener("input",updateCount);
 $("#clearBtn").onclick=()=>{input.value="";updateCount();input.focus();};
 $("#sampleBtn").onclick=()=>{input.value="1,ヨッシー\n2,やまだ\n3,みらくる☆桃香\n41,オッス\n42,桜川俊信";updateCount();};
-startBtn.onclick=start;$("#recordStartBtn").onclick=start;pauseBtn.onclick=togglePause;resetBtn.onclick=reset;
-$("#recordBtn").onclick=enterRecording;$("#exitRecord").onclick=exitRecording;
+startBtn.onclick=start;
+$("#recordStartBtn").onclick=start;
+pauseBtn.onclick=togglePause;
+resetBtn.onclick=reset;
+$("#recordBtn").onclick=enterRecording;
+$("#exitRecord").onclick=exitRecording;
 $("#closeWinner").onclick=()=>overlay.classList.remove("show");
 $("#fullscreenBtn").onclick=async()=>{try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();else await document.exitFullscreen();}catch(e){}};
-window.addEventListener("resize",()=>fitGrid((running?active:parse()).length));
+window.addEventListener("resize",()=>fitGrid(finalMode?active.length:(running?participants.length:parse().length),finalMode));
 document.addEventListener("keydown",e=>{
  if(e.key==="Escape"&&document.body.classList.contains("recording"))exitRecording();
  if(e.code==="Space"&&running){e.preventDefault();togglePause();}
